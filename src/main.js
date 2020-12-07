@@ -5,9 +5,26 @@ import router from './router'
 import store from './store'
 import vuetify from './plugins/vuetify';
 import firebase from 'firebase'
+import VueGeolocation from 'vue-browser-geolocation';
+import * as VueGoogleMaps from 'vue2-google-maps'
 
 Vue.config.productionTip = false
 
+Vue.use(VueGeolocation);
+
+Vue.use(VueGoogleMaps, {
+  load: {
+    key: 'AIzaSyB9NcXbjKSkpLR9hOuXMiTdDqT6FNbon0c',
+    libraries: 'places', // This is required if you use the Autocomplete plugin
+    // OR: libraries: 'places,drawing'
+    // OR: libraries: 'places,drawing,visualization'
+    // (as you require)
+ 
+    //// If you want to set the version, you can do so:
+    // v: '3.26',
+  },
+});
+ 
 
 var firebaseConfig = {
   apiKey: "AIzaSyChEar4GYmpsNNRHVbHBzGs4Ai4Hr-k16Y",

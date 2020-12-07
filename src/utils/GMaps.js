@@ -2,7 +2,7 @@
 
 // Your personal API key.
 // Get it here: https://console.cloud.google.com/google/maps-apis
-const API_KEY = 'AIzaSyCWAaBJsI1234TI18PITVy7p0Qb6ht123';
+const API_KEY = 'AIzaSyChEar4GYmpsNNRHVbHBzGs4Ai4Hr-k16Y';
 const CALLBACK_NAME = 'gmapsCallback';
 
 let initialized = !!window.google;
@@ -20,7 +20,7 @@ export default function init() {
   // the `initPromise` should get resolved
   // eventually.
   if (initialized) return initPromise;
-
+ 
   initialized = true;
   // The callback function is called by
   // the Google Maps script if it is

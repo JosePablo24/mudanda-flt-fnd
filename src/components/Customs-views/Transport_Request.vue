@@ -4,17 +4,8 @@
             <Navbar/>
         </header>
 
-        <body>
-            <v-row>
-                <v-col>
-                    <Maps />
-                </v-col>
-                <v-col>
-                    <v-card>
-                        ostias
-                    </v-card>
-                </v-col>
-            </v-row>
+        <body class="ma-2">
+            <Maps />        
         </body>
     </div>
 </template>

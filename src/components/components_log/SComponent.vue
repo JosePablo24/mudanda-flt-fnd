@@ -20,7 +20,7 @@ v<template>
                   size="170"
                 >
                 <v-icon size="170">
-                  mdi-account-circle
+                  mdi-account-circle-outline
                 </v-icon>
                 </v-avatar>
               </div>
@@ -60,7 +60,7 @@ v<template>
                   depressed
                   color="primary"
                   block
-                  @click="submit"
+                  @click="signup"
                 >
                   Sign Up with Email
                 </v-btn>                
@@ -73,7 +73,7 @@ v<template>
                   depressed
                   color="primary"
                   block
-                  @click="facebook_submit"
+                  @click="facebook_signup"
                 >
                 <v-icon left>
                   mdi-facebook
@@ -85,7 +85,7 @@ v<template>
                   depressed
                   color="error"
                   block
-                  @click="google_submit"
+                  @click="google_signup"
                 >
                 <v-icon left>
                   mdi-google
@@ -98,7 +98,7 @@ v<template>
                   depressed
                   color="info"
                   block
-                  @click="twitter_submit"
+                  @click="twitter_signup"
                 >
                 <v-icon left>
                   mdi-twitter
@@ -151,10 +151,7 @@ components: {
           required: value => !!value || 'Required.',
           min: v => v.length >= 8 || 'Min 8 characters',
           emailMatch: () => (`The email and password you entered don't match`),
-        },
-        min: 1,
-        max: 10,
-        number: 1,
+        },        
     }),
 
     computed: {
@@ -168,10 +165,16 @@ components: {
     },    
 
     methods: {           
-      submit () {
+      signup () {
         if(this.password == this.password1){
+          var user
           firebase.auth().createUserWithEmailAndPassword(this.email, this.password).then(
-            () =>(
+            (response) => (      
+              console.log(response),
+              user = response.user,              
+              this.create_User(user),              
+
+              user.sendEmailVerification(),
               this.$router.push({ name: 'Home' })
             )
           ).catch(function(error) {
@@ -185,16 +188,38 @@ components: {
         }
       },
 
-      create_User(user){
-        console.log('uid →→→→ ', user.uid);
-        API.post('/user/User_lista/',{
+      create_User(user){        
+        var numero = ''
+        var nu = 0
+        for (let i = 0; i < 8; i++) {
+          nu = Math.floor(Math.random() * 10);
+          numero += nu
+        }
+        numero = parseInt(numero)
+                
+        API.post('client_user/',{
           User_id : user.uid,
-          No_user : this.getInput(),
+          No_user : parseInt(numero),
           Type_user :'Cliente',
-              })
+          }).then((response) => {            
+            console.log(response);
+            
+            API.post('notification',{
+              Client_user_id : response.data.id,
+              Subject : 'Bienvenida',
+              From : 'Administracion',
+              Message : 'Muchas Gracias por escoger esta plataforma para que hagas tus traslados o trabajes como transportador de bienes personales, esperamos ser una plataforma que ayude a que tus objetivos sean mas faciles para tu uso',
+            }).then((response1)=>{
+              console.log(response1);
+            }).catch(error1 =>{
+              console.error(error1);
+            })
+          }).catch(error => {
+            console.log(error.message);
+          })
       },
 
-      facebook_submit(){
+      facebook_signup(){
         var provider = new firebase.auth.FacebookAuthProvider();
         var token
         var user
@@ -204,8 +229,8 @@ components: {
           token = result.credential.accessToken,
           // The signed-in user info.
           user = result.user,
-          this.$router.push({ name: 'Home' }),
-          this.create_User(user)
+          this.create_User(user),
+          this.$router.push({ name: 'Home' })
           // ...
         )).catch(function(error) {
           // Handle Errors here.
@@ -220,11 +245,11 @@ components: {
 
       },
 
-      twitter_submit (){
+      twitter_signup (){
 
       },
 
-      google_submit (){
+      google_signup (){
         var provider = new firebase.auth.GoogleAuthProvider();
         var token
         var user
@@ -232,9 +257,9 @@ components: {
           // This gives you a Google Access Token. You can use it to access the Google API.
           token = result.credential.accessToken,
           // The signed-in user info.
-           user = result.user,
-          this.$router.push({ name: 'Home' }),          
-          this.create_User(user)
+          user = result.user,
+          this.create_User(user),
+          this.$router.push({ name: 'Home' })          
           // ...
         )).catch(function(error) {
           // Handle Errors here.
@@ -248,31 +273,10 @@ components: {
         });
       },
       
-      loadNum: function () {
-        this.min = 1;
-        this.max = 10000000;
-        this.getRandomNumber();
-      },
-      getInput: function () {
-        let min = Number(this.min)
-        let max = Number(this.max)
-        if(min > max) {
-          [min, max] = [max, min]
-        }
-        this.min = min
-        this.max = max
-        this.getRandomNumber()
-      },
-      getRandomNumber: function () {
-        this.number = this.generateNumber()
-      },
-      generateNumber: function () {
-        return Math.floor(Math.random()*(this.max-this.min+1)+this.min);
-      }
+      
       
     },
-    created: function () {
-      this.getRandomNumber()
+    created: function () {      
   },
 }
 </script>

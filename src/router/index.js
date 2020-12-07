@@ -1,30 +1,46 @@
 import Vue from 'vue'
 import firebase from 'firebase'
-
-
-import Home from '../views/Home.vue'
+import { API } from '@/services/axios.js'
 import VueRouter from 'vue-router'
+
+// Vistas Generales
+import Home from '../views/Home.vue'
 import SComponent from '../components/components_log/SComponent'
 import LComponent from '../components/components_log/LComponent'
 import Profile from '../views/share-nav/Profile'
 import Edit_Profile from '../components/Profiles-Actions/Edit_Profile'
-import Worker_Request from '../components/Workers-views/Worker_Request'
 import About from '../views/share-nav/shared-view-about/About'
 import Termconditions from '../views/share-nav/shared-view-about/TermConditions'
 import Contact from '../views/share-nav/shared-view-about/Contact'
 import Blog from '../views/share-nav/shared-view-about/Blog'
 import Team from '../views/share-nav/shared-view-about/Team'
 import Services from '../views/share-nav/shared-view-about/Services'
-import Worker_Profile from '../components/Workers-views/Worker_Profile'
+import Confirm from '../views/share-nav/Confirm'
+import Notifications from '../views/share-nav/Notifications'
+
+// vistas de administrador
+import Admin_activities from '../components/Admin-views/Admin_activities'
+import Users_list from '../components/Admin-views/Users_list'
+import Request_work_list from '../components/Admin-views/Request_work_list'
+import Group_work_request from '../components/Admin-views/Group_work_request'
+import Client_profile from '../components/Admin-views/Client_profile';
+import Request_work_inspect from '../components/Admin-views/Request_work_inspect'
+
+// Vistas de Cliente
+import Worker_Request from '../components/Workers-views/Worker_Request'
 import Transport_Request from '../components/Customs-views/Transport_Request'
-import Groups_list_workers from '../components/Customs-views/Groups_list_workers'
 import Freight_list from '../components/Customs-views/Freight_list'
 import Nearby_places from '../components/Customs-views/Nearby_places'
-import Admin_activities from '../components/Admin-views/Admin_activities'
-import Confirm from '../views/share-nav/Confirm'
+import Groups_list_workers from '../components/Customs-views/Groups_list_workers'
+
+// Vistas de Trabajador
+import Worker_Profile from '../components/Workers-views/Worker_Profile'
+
+
 
 Vue.use(VueRouter)
 const routes = [
+  // Vistas Generales
   {
     path: '*',
     redirect: '/home'
@@ -33,6 +49,7 @@ const routes = [
     path: '/',
     redirect: '/home'
   },
+  // log_in component
   {
     path: '/log_in',
     name: 'LComponent',
@@ -41,6 +58,7 @@ const routes = [
       autentificado: false
     },    
   },
+  // sign_up component
   {
     path: '/sign_up',
     name: 'SComponent',
@@ -49,6 +67,7 @@ const routes = [
       autentificado: false
     }   
   },
+  // home component
   {
     path: '/home',
     name: 'Home',
@@ -56,17 +75,18 @@ const routes = [
     meta:{
       autentificado: true
     },
-    beforeEnter: (to, from, next) => {
-      let usuario = firebase.auth().currentUser;
-      let autorizacion = to.matched.some(record => record.meta.autentificado)
-      console.log(usuario.providerData[0].providerId);
-      if(usuario.emailVerified == false && (usuario.providerData[0].providerId == 'google.com' || usuario.providerData[0].providerId == 'password')){
-        next('confirm')
-      }else{
-        next()
-      }
-    }
+    // beforeEnter: (to, from, next) => {
+    //   let usuario = firebase.auth().currentUser;
+    //   let autorizacion = to.matched.some(record => record.meta.autentificado)
+    //   console.log(usuario.providerData[0].providerId);
+    //   if(usuario.emailVerified == false && (usuario.providerData[0].providerId == 'google.com' || usuario.providerData[0].providerId == 'password')){
+    //     next('confirm')
+    //   }else{
+    //     next()
+    //   }
+    // }
   },
+  //about component
   {
     path: '/about',
     name: 'About',
@@ -80,7 +100,7 @@ const routes = [
     }   
   },        
   {
-    path: '/profile',
+    path: '/profile/:id',
     name: 'Profile',
     component: Profile,
     meta:{
@@ -88,21 +108,13 @@ const routes = [
     }   
   },
   {
-    path: '/edit_profile',
+    path: '/edit_profile/:id',
     name: 'Edit_Profile',
     component: Edit_Profile,
     meta:{
       autentificado: true
     }   
-  },    
-  {
-    path: '/worker_request',
-    name: 'Worker_Request',
-    component: Worker_Request,
-    meta:{
-      autentificado: true
-    }   
-  },
+  },      
   {
     path: '/termAndConditions',
     name: 'Termconditions',
@@ -144,20 +156,53 @@ const routes = [
     }   
   },
   {
-    path: '/worker_profile',
-    name: 'Worker_Profile',
-    component: Worker_Profile,
+    path: '/confirm',
+    name : 'Confirm',
+    component : Confirm,
+    meta:{      
+      autentificado: true
+    },              
+  },
+  {
+    path: '/notifications/:id',
+    name: 'Notifications',
+    component: Notifications,
+    meta:{
+      autentificado: true
+    },
+  },
+  // Vistas de Cliente
+  {
+    path: '/worker_request/:id',
+    name: 'Worker_Request',
+    component: Worker_Request,
     meta:{
       autentificado: true
     }   
   },
   {
-    path: '/transport_request',
+    path: '/transport_request/:id',
     name: 'Transport_Request',
     component: Transport_Request,
     meta:{
       autentificado: true
-    }   
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Cliente') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })
+      console.log(this.user);
+
+    },
   },
   {
     path: '/workers_group',
@@ -165,7 +210,23 @@ const routes = [
     component: Groups_list_workers,
     meta:{
       autentificado: true
-    }   
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Cliente') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })
+      console.log(this.user);
+
+    },
   },
   {
     path: '/freight_list',
@@ -173,7 +234,23 @@ const routes = [
     component : Freight_list,
     meta:{
       autentificado: true
-    }   
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Cliente') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })
+      console.log(this.user);
+
+    },
   },
   {
     path: '/nearby_places',
@@ -181,34 +258,180 @@ const routes = [
     component : Nearby_places,
     meta:{
       autentificado: true
-    }   
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Cliente') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })
+      console.log(this.user);
+
+    },
   },
+
+  // vistas de Trabajador
+    // Perfil del trbajador
+  {
+    path: '/worker_profile',
+    name: 'Worker_Profile',
+    component: Worker_Profile,
+    meta:{
+      autentificado: true
+    }   
+  },  
+  // vista de administrador
+    // admin activities
   {
     path: '/admin_activities',
     name : 'Admin_activities',
     component : Admin_activities,
     meta:{
       autentificado: true
-    }   
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
   },
+    // user list component
   {
-    path: '/confirm',
-    name : 'Confirm',
-    component : Confirm,
-    meta:{      
+    path: '/users_list',
+    name : 'Users_list',
+    component : Users_list,
+    meta:{
       autentificado: true
     },
     beforeEnter: (to, from, next) => {
-      let usuario = firebase.auth().currentUser;
-      let autorizacion = to.matched.some(record => record.meta.autentificado)
-      if(usuario.emailVerified == false && (usuario.providerData[0].providerId == 'google.com' || usuario.providerData[0].providerId == "password")){
-        next('confirm')
-      }else{
-        next()    
-      }
-    }
-      
-  }
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
+  },
+  // Request work list component
+  {
+    path: '/request_work_list',
+    name : 'Request_work_list',
+    component : Request_work_list,
+    meta:{
+      autentificado: true
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
+  },
+  // Request group list component
+  {
+    path: '/request_group_list',
+    name : 'Group_work_request',
+    component : Group_work_request,
+    meta:{
+      autentificado: true
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
+  },
+  // Client profile
+  {
+    path: '/user_list/client_profile/:id',
+    name : 'Client_profile',
+    component : Client_profile,
+    meta:{
+      autentificado: true
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
+  },
+  // Request work inspect
+  {
+    path: '/request_work_list/request_work_inspect/:id',
+    name : 'Request_work_inspect',
+    component : Request_work_inspect,
+    meta:{
+      autentificado: true
+    },
+    beforeEnter: (to, from, next) => {
+      let usuario = firebase.auth().currentUser;            
+      API.get('client_user/'+ usuario.uid).then(response =>{            
+        console.log(response);
+        let type_user = response.data[0].Type_user;
+        if (type_user == 'Administrador') {
+          next()
+        } else {
+          next('home')  
+        }
+      }).catch(error =>{
+        console.error(error);
+      })      
+
+    },
+  },
 
 ]
 

@@ -55,21 +55,47 @@
           </v-btn>
 
           <div class="ma-1" v-if="currentuser != null">
-            <v-menu bottom offset-y >
+            <v-menu bottom transition="slide-y-transition" offset-y >
               <template v-slot:activator="{ on, attrs }">
-                <v-btn color="blue-dark" fab  v-bind="attrs" v-on="on">
+                <v-btn color="blue-dark" fab  v-bind="attrs" v-on="on" @click="charge()">
                   <v-badge>
                     <v-icon>mdi-bell</v-icon>
                   </v-badge>
                 </v-btn>  
               </template>
-              <v-list>                            
-
-              <v-list-item-group>
-
-              </v-list-item-group>
-                
-            </v-list>
+              
+              <v-list two-line  >
+                <div class="ma-3">Today</div>
+                <template v-for="(item, index) in items" >
+                  <!-- <v-subheader
+                    v-if="item.Subject"
+                    :key="item.Subject"
+                  >
+                    Today
+                  </v-subheader> -->
+                  <v-divider                    
+                    :key="index"
+                    inset                    
+                  ></v-divider>
+                  <v-list-item                    
+                    :key="item.Subject"
+                    @click="check(item.id)"
+                  >
+                    <v-list-item-avatar size="40">
+                      <v-icon size="40">mdi-account-circle-outline</v-icon>
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title > {{item.Subject}} &mdash; <span class="font-weight-bold"> {{item.From}} </span> </v-list-item-title>
+                      <v-list-item-subtitle v-html="item.Message" > </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <div class="text-center">
+                  <v-list-item class="text-center" @click="ver_todo()">
+                     Ver todo ...                    
+                  </v-list-item>
+                </div>   
+              </v-list>
             </v-menu>  
           </div>                    
                 
@@ -86,9 +112,11 @@
               
               <v-list-item  two-line>
                 <v-list-item-content>
-                  <v-list-item-title class="title">
+                  <v-list-item-title class="title" v-if=" Name != ''">
                     {{Name}}
                   </v-list-item-title>
+                  
+                  
                   <v-list-item-subtitle>{{Email}}</v-list-item-subtitle>
                 </v-list-item-content> 
               </v-list-item>
@@ -96,21 +124,21 @@
               <v-divider></v-divider>
 
               <v-list-item-group> 
-                <v-list-item link href="/profile">              
+                <v-list-item link @click="change()">
                     <v-icon left>                
                         mdi-account
                       </v-icon>
                       Profile              
                 </v-list-item>
 
-                <v-list-item link href="/admin_activities">              
+                <v-list-item link v-if="type_user == 'Administrador'" href="/admin_activities">              
                     <v-icon left>                
                         mdi-account-tie
                       </v-icon>
                       Admin Activities             
                 </v-list-item>
 
-                <v-list-item link href="/worker_profile">
+                <v-list-item link v-if="type_user == 'Trabajador'" href="/worker_profile">
                     <v-icon left>                
                         mdi-account-network
                       </v-icon>
@@ -144,7 +172,22 @@
               color="teal"
               grow
             >
-              <v-btn href="/freight_list">
+              <v-btn v-if="type_user == 'Administrador'" href="/users_list">
+                <span> User's </span>
+                <v-icon> mdi-account-settings-outline </v-icon>
+              </v-btn>
+
+              <v-btn v-if="type_user == 'Administrador'" href="/request_work_list">
+                <span> Work Request</span>
+                <v-icon> mdi-account-cog</v-icon>
+              </v-btn>
+
+              <v-btn v-if="type_user == 'Trabajador'" >
+                <span>Works</span>
+                <v-icon> mdi-account-multiple-plus </v-icon>
+              </v-btn>
+
+              <v-btn href="/freight_list" v-if="type_user == 'Cliente'" >
                 <span>Freight's List Group's</span>
 
                 <v-icon>mdi-account-group</v-icon>
@@ -156,11 +199,27 @@
                 <v-icon>mdi-home</v-icon>
               </v-btn>
 
-              <v-btn href="/nearby_places">
+              <v-btn href="/nearby_places" v-if="type_user == 'Cliente'" >
                 <span>Nearby Places</span>
 
                 <v-icon>mdi-map-marker</v-icon>
               </v-btn>
+
+              <v-btn v-if="type_user == 'Trabajador'" >
+                <span> Task Clompleted</span>
+                <v-icon></v-icon>
+              </v-btn>
+
+              <v-btn v-if="type_user == 'Administrador'" href="/request_group_list">
+                <span> Group Work Request</span>
+                <v-icon> mdi-account-group</v-icon>
+              </v-btn>
+              
+              <v-btn  v-if="type_user == 'Administrador'">
+                <span> Chat</span>
+                <v-icon> mdi-chat-processing-outline</v-icon>
+              </v-btn>
+
             </v-bottom-navigation>
             
           </v-card>
@@ -171,6 +230,7 @@
 <script>
 import Vue from 'vue';
 import firebase from 'firebase'
+import { API } from '@/services/axios.js'
 
 export default {
   name: 'Navbar',
@@ -180,24 +240,59 @@ export default {
     currentuser: '',
     Email : '',
     Name : '',
-    Picture : ''
-
+    Picture : '',
+    type_user: '',
+    element: [],
+    id: '',
+    items: []
   }),  
   methods: {            
       logout () {        
         firebase.auth().signOut().then(() => (
           // Sign-out successful.
-          this.$router.replace('log_in')
+          this.$router.push({name: 'LComponent'}).catch(error => {
+            console.info(error.message)
+            })
         )).catch(function(error) {
           // An error happened.
         });
-    }
+      },
+      change(){
+        this.$router.push('profile/'+ this.currentuser.uid)
+      },
+      check(id){
+        alert('este es →→ ' + id)
+      },
+      ver_todo(){
+        this.$router.push({name : 'Notifications', params:{ id: this.id }}).catch(error =>{
+          console.error(error);
+        })
+      },
+      charge(){
+        API.get('notification/'+ this.id ).then(response =>{
+          console.log(response);
+          this.items = response.data
+        }).catch(error=>{
+          console.error(error);
+        })
+
+      }
   },
   mounted(){
-      this.currentuser = firebase.auth().currentUser;
+      this.currentuser = firebase.auth().currentUser;      
       this.Email = this.currentuser.email
       this.Name = this.currentuser.displayName
       this.Picture = this.currentuser.photoURL
+      API.get('client_user/'+ this.currentuser.uid).then(response =>{
+        this.element = response.data
+        this.type_user = this.element[0].Type_user
+        this.id = this.element[0].id
+        //console.log(this.element[0], this.id);
+        console.log(response);
+      }).catch(error =>{
+        console.error(error);
+      })
+            
   }
 }
 </script>

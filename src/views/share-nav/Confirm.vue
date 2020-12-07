@@ -2,39 +2,69 @@
   <div>
       <header>
 
-    </header>
+    </header>    
+
     <body>
         <div class="mx-auto ma-2"> 
             <v-card
-                class="mx-auto justify-center"
-                max-width="40%"
-            >                
-                <v-card-subtitle class="pb-0">
-                Number 10
-                </v-card-subtitle>
+                :loading="loading"
+                class="mx-auto my-12"
+                max-width="85%"
+            >
+                <v-toolbar
+                    color="#F2A539"
+                    light
+                    extended
+                    height="200"
+                    >
+                    
+                    <template v-slot:extension max-width="500">
+                        <!-- <v-btn
+                        fab
+                        color="cyan accent-2"
+                        bottom
+                        left
+                        absolute
+                        @click="dialog = !dialog"
+                        >
+                        <v-icon>mdi-plus</v-icon>
+                        </v-btn> -->
+                        <v-card
+                            class="mx-auto"                            
+                            absolute
+                            hover ="true"
+                        >
+                            <v-card-text>                            
+                                <h1 class="display-1 text--primary text-center ma-2"> Welcome </h1>
 
-                <v-card-text class="text--primary">
-                <div>Whitehaven Beach</div>
+                                <div class="text-center">
+                                    <img src="https://img.icons8.com/clouds/100/000000/handshake.png" width="125" height="120">
+                                </div>                                
+                                <br>
+                            <p display="false">We're excited to have you get started. First, you need to confirm your account. </p> <p> Press the button below to send you a email verificator.</p>
+                            <div class="text--primary text-center">
+                                <v-btn
+                                    color="#F2A539"
+                                    dark
+                                    large
+                                    @click="send_confirm()"
+                                >
+                                    Click to send
+                                </v-btn>
+                            </div>
+                            <div>
+                                Administrador,<br>
+                                Ftl-Mdz Team
+                            </div>
+                            
+                            </v-card-text>
+                           
+                        </v-card>
+                    </template>
+                    </v-toolbar>
 
-                <div>Whitsunday Island, Whitsunday Islands</div>
-                </v-card-text>
-
-                <v-card-actions>
-                <v-btn
-                    color="orange"
-                    text
-                >
-                    Share
-                </v-btn>
-
-                <v-btn
-                    color="orange"
-                    text
-                >
-                    Explore
-                </v-btn>
-                </v-card-actions>
-            </v-card>
+                
+            </v-card>           
         </div>
     </body>
   </div>
@@ -47,8 +77,18 @@ export default {
     data: () => ({
         currentuser: '',
     }),
-    mounted(){
-        this.currentuser = firebase.auth().currentUser
+    mounted(){        
+    },
+    methods: {   
+        send_confirm(){
+            var user = firebase.auth().currentUser;
+
+        user.sendEmailVerification().then(function() {
+            console.log('Send verification');            
+        }).catch(function(error) {
+            console.error(error);
+        });
+        }
     }
 }
 </script>

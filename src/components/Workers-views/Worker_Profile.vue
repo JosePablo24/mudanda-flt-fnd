@@ -52,7 +52,7 @@
                     patas
                 </v-card-body>
             </v-card>
-
+            <br><br><br>
         </body>
     </div>
     
@@ -60,6 +60,8 @@
 
 <script>
 import Navbar from '../../views/share-nav/Navbar'
+import firebase from 'firebase'
+import { API } from '@/services/axios.js'
 export default {
     name: 'Worker_Profile',
     components: {
